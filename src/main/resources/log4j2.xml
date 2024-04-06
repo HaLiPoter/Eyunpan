@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <Properties>
+        <Property name="LOG_FOLDER">logs</Property>
+        <Property name="LOG_FILE_NAME" >eyunpan.log</Property>
+        <Property name="log.path">E:/ideaSave/Eyunpan/</Property>
+        <Property name="log.root.level">info</Property>
+    </Properties>
+    <Appenders>
+        <Console name="CONSOLE" target="SYSTEM_OUT">
+            <PatternLayout charset="UTF-8" pattern="%d{yyyy-MM-dd HH:mm:ss,GMT+8} [%p][%c][%M][%L]-> %m%n" />
+        </Console>
+
+        <RollingFile name="RollingFile" fileName="${log.path}/${LOG_FOLDER}/${LOG_FILE_NAME}"
+            filePattern="${log.path}/${LOG_FOLDER}/$${date:yyyy-MM-dd}/info-%d{yyyy-MM-dd}-%i.log">
+            <PatternLayout charset="UTF-8" pattern="%d{yyyy-MM-dd HH:mm:ss,GMT+8} [%p][%c][%M][%L]-> %m%n"/>
+            <Policies>
+                <CronTriggeringPolicy schedule="0 0 0 * * ?"/>
+                <SizeBasedTriggeringPolicy size="5 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="3"/>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <root level="info">
+            <AppenderRef ref="CONSOLE" />
+            <AppenderRef ref="RollingFile" />
+        </root>
+    </Loggers>
+</configuration>
