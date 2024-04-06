@@ -16,4 +16,6 @@ public interface FileShareService extends IService<FileShareInfo> {
     void deleteFileShareBatch(String[] split, String userId);
 
     SessionShareDto checkShareCode(String shareId, String code);
+
+    void saveShareFile(FileShareInfo share);
 }

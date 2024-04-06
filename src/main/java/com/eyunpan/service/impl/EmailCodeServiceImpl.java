@@ -8,10 +8,8 @@ import com.eyunpan.component.RedisComponent;
 import com.eyunpan.config.AppConfig;
 import com.eyunpan.entity.constants.Constants;
 import com.eyunpan.entity.dto.SystemSettingDto;
-import com.eyunpan.entity.po.EmailCode;
 import com.eyunpan.entity.po.UserInfo;
 import com.eyunpan.exception.CustomException;
-import com.eyunpan.mappers.EmailCodeMapper;
 import com.eyunpan.mappers.UserInfoMapper;
 import com.eyunpan.service.EmailCodeService;
 import com.eyunpan.service.UserInfoService;
@@ -30,14 +28,12 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 
 @Service
-public class EmailCodeServiceImpl extends ServiceImpl<EmailCodeMapper, EmailCode> implements EmailCodeService {
+public class EmailCodeServiceImpl implements EmailCodeService{
 
     private static Logger logger= LoggerFactory.getLogger(EmailCodeServiceImpl.class);
 
     @Resource
     private AppConfig appConfig;
-    @Autowired
-    private EmailCodeMapper emailCodeMapper;
 
     @Autowired
     private UserInfoMapper userInfoMapper;

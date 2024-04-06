@@ -121,6 +121,5 @@ public class RedisComponent {
         redisUtils.setex(Constants.REDIS_KEY_USER_FILE_TEMP_SIZE + userId + fileId, currentSize + fileSize, Constants.REDIS_KEY_EXPIRES_ONE_HOUR);
     }
 
-    //文件分享信息
 
 }

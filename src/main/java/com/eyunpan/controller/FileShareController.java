@@ -7,12 +7,14 @@ import com.eyunpan.entity.po.FileShareInfo;
 import com.eyunpan.entity.qo.FileShareQO;
 import com.eyunpan.entity.vo.PaginationResultVO;
 import com.eyunpan.entity.vo.ResponseVO;
+import com.eyunpan.entity.vo.ShareInfoVO;
 import com.eyunpan.service.FileShareService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpSession;
+import java.util.Date;
 
 @RestController("fileShareController")
 @RequestMapping("/share")
@@ -40,13 +42,13 @@ public class FileShareController extends IBaseController{
                                 @CheckParam(required = true) Integer validType,
                                 String code) {
         SessionUserDto userDto = getUserInfoFromSession(session);
-        FileShareInfo share = new FileShareInfo();
-        share.setFileId(fileId);
-        share.setValidType(validType);
-        share.setCode(code);
-        share.setUserId(userDto.getUserId());
-        fileShareService.save(share);
-        return getSuccessResponseVO(share);
+        FileShareInfo shareInfo = new FileShareInfo();
+        shareInfo.setValidType(validType);
+        shareInfo.setFileId(fileId);
+        shareInfo.setCode(code);
+        shareInfo.setUserId(userDto.getUserId());
+        fileShareService.saveShareFile(shareInfo);
+        return getSuccessResponseVO(shareInfo);
     }
 
     @RequestMapping("/cancelShare")

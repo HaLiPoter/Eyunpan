@@ -92,7 +92,6 @@ public class IFileShareController extends BaseFileController {
         shareInfoVO.setFileName(fileInfo.getFileName());
         UserInfo userInfo = userInfoService.getById(shareInfoVO.getUserId());
         shareInfoVO.setNickName(userInfo.getNickName());
-        shareInfoVO.setAvatar(userInfo.getQqAvatar());
         shareInfoVO.setUserId(userInfo.getUserId());
         return shareInfoVO;
     }

@@ -30,10 +30,6 @@ public class UserInfoVO implements Serializable {
      */
     private String email;
 
-    /**
-     * qq 头像
-     */
-    private String qqAvatar;
 
     /**
      * 加入时间

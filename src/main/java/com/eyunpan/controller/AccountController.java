@@ -21,8 +21,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpFilter;
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -161,6 +162,25 @@ public class AccountController extends IBaseController{
         }
         response.setContentType("image/jpg");
         readFile(response, avatarPath);
+    }
+
+    @RequestMapping("/updateUserAvatar")
+    @MInterceptor
+    public ResponseVO updateUserAvatar(HttpSession session, MultipartFile avatar) {
+        SessionUserDto sessionUserDto = getUserInfoFromSession(session);
+        String baseFolder = appConfig.getProjectFolder() + Constants.FILE_FOLDER_FILE;
+        File targetFileFolder = new File(baseFolder + Constants.FILE_FOLDER_AVATAR_NAME);
+        if (!targetFileFolder.exists()) {
+            targetFileFolder.mkdirs();
+        }
+        File targetFile = new File(targetFileFolder.getPath() + "/" + sessionUserDto.getUserId() + Constants.AVATAR_SUFFIX);
+        try {
+            avatar.transferTo(targetFile);
+        } catch (Exception e) {
+            logger.error("上传头像失败", e);
+        }
+
+        return getSuccessResponseVO(null);
     }
 
     private void printNoDefaultImage(HttpServletResponse response) {

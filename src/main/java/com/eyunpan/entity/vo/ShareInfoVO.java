@@ -14,7 +14,6 @@ public class ShareInfoVO {
     private String fileName;
     private Boolean currentUser;
     private String fileId;
-    private String avatar;
     private String userId;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date shareTime;

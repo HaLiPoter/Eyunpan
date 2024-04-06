@@ -7,5 +7,4 @@ public class SessionUserDto {
     private String nickName;
     private String userId;
     private Boolean isAdmin;
-    private String avatar;
 }
