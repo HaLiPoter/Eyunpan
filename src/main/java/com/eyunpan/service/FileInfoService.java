@@ -43,4 +43,7 @@ public interface FileInfoService extends IService<FileInfo> {
     void checkRootFilePid(String fileId, String shareUserId, String filePid);
 
     void saveShare(String fileId, String shareFileIds, String myFolderId, String shareUserId, String userId);
+
+    PaginationResultVO findRankByPage(FileInfoQO query);
+
 }

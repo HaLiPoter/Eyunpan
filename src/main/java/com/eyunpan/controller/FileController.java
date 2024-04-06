@@ -3,6 +3,8 @@ package com.eyunpan.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.eyunpan.annotation.CheckParam;
 import com.eyunpan.annotation.MInterceptor;
+import com.eyunpan.component.RedisComponent;
+import com.eyunpan.entity.constants.Constants;
 import com.eyunpan.entity.dto.SessionUserDto;
 import com.eyunpan.entity.dto.UploadResultDto;
 import com.eyunpan.entity.enums.FileCategoryEnums;
@@ -10,12 +12,16 @@ import com.eyunpan.entity.enums.FileDelFlagEnums;
 import com.eyunpan.entity.enums.FileFolderTypeEnums;
 import com.eyunpan.entity.po.FileInfo;
 import com.eyunpan.entity.qo.FileInfoQO;
+import com.eyunpan.entity.qo.SimplePage;
 import com.eyunpan.entity.vo.FileInfoVO;
 import com.eyunpan.entity.vo.PaginationResultVO;
 import com.eyunpan.entity.vo.ResponseVO;
+import com.eyunpan.tuple.ITuple2;
 import com.eyunpan.utils.CopyTools;
 import com.eyunpan.utils.StringTools;
 import com.eyunpan.utils.WrapperFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -191,5 +197,13 @@ public class FileController extends BaseFileController{
         SessionUserDto webUserDto = getUserInfoFromSession(session);
         fileInfoService.removeFile2RecycleBatch(webUserDto.getUserId(), fileIds);
         return getSuccessResponseVO(null);
+    }
+
+    @Autowired
+    private RedisComponent redisComponent;
+    @RequestMapping("/rank")
+    public ResponseVO rank(HttpSession session,FileInfoQO query){
+        PaginationResultVO rankByPage = fileInfoService.findRankByPage(query);
+        return getSuccessResponseVO(rankByPage);
     }
 }

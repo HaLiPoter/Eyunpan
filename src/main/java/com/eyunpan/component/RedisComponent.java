@@ -5,13 +5,18 @@ import com.eyunpan.entity.dto.DownloadFileDto;
 import com.eyunpan.entity.dto.SystemSettingDto;
 import com.eyunpan.entity.dto.UserSpaceDto;
 import com.eyunpan.entity.po.UserInfo;
+import com.eyunpan.entity.vo.FileCntDto;
+import com.eyunpan.entity.vo.PaginationResultVO;
 import com.eyunpan.mappers.FileMapper;
 import com.eyunpan.mappers.UserInfoMapper;
 import com.eyunpan.service.FileInfoService;
+import com.eyunpan.tuple.ITuple2;
+import com.mysql.cj.log.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 @Component("redisComponent")
 public class RedisComponent {
@@ -122,4 +127,20 @@ public class RedisComponent {
     }
 
 
+    public List<ITuple2> getFileDownloadRank(String key){
+        return redisUtils.zrevrangeWithScore(key);
+    }
+
+    public void addFileDownloadCnt(String key){
+        redisUtils.zaddScore(Constants.REDIS_FILE_TOP,key,1);
+    }
+
+    public void setFileRankCache(PaginationResultVO p){
+
+        redisUtils.setex(Constants.REDIS_FILE_TOP_CACHE,p,15);
+    }
+
+    public PaginationResultVO<FileCntDto> getFileRankCache(){
+        return (PaginationResultVO<FileCntDto>) redisUtils.get(Constants.REDIS_FILE_TOP_CACHE);
+    }
 }

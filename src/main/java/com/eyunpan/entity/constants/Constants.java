@@ -85,4 +85,8 @@ public class Constants {
     public static final String REDIS_KEY_USER_FILE_TEMP_SIZE = "eyunpan:user:file:temp:";
 
     public static final String REDIS_EMAIL_CODE="eyunpan:email:code";
+
+    public static final String REDIS_FILE_TOP="eyunpan:file:top";
+
+    public static final String REDIS_FILE_TOP_CACHE="eyunpan:file:top:cache";
 }

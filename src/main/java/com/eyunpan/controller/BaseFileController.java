@@ -10,6 +10,7 @@ import com.eyunpan.entity.enums.FileFolderTypeEnums;
 import com.eyunpan.entity.enums.ResponseCodeEnum;
 import com.eyunpan.entity.po.FileInfo;
 import com.eyunpan.entity.qo.FileInfoQO;
+import com.eyunpan.entity.vo.FileCntDto;
 import com.eyunpan.entity.vo.FolderVO;
 import com.eyunpan.entity.vo.ResponseVO;
 import com.eyunpan.exception.CustomException;
@@ -154,6 +155,8 @@ public class BaseFileController extends IBaseController {
 
         redisComponent.saveDownloadCode(code, downloadFileDto);
 
+        //下载排行逻辑
+        redisComponent.addFileDownloadCnt(fileInfo.getFileMd5());
         return getSuccessResponseVO(code);
     }
 

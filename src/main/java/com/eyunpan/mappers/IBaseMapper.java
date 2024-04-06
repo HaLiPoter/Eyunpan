@@ -17,4 +17,6 @@ interface IBaseMapper<T, P> extends BaseMapper<T> {
 
 
 	 Integer IselectCount(@Param("query") P p);
+
+
 }

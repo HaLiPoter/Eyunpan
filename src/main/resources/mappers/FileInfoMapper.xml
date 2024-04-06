@@ -188,6 +188,7 @@
     </select>
 
 
+
     <!-- 插入或者更新 （匹配有值的字段）-->
     <insert id="IinsertOrUpdate" parameterType="com.eyunpan.entity.po.FileInfo">
         INSERT INTO file_info
@@ -637,6 +638,10 @@
         select IFNULL(sum(file_size), 0)
         from file_info
         where user_id = #{userId}
+    </select>
+    <select id="selectCountByMd5" resultType="java.lang.Integer">
+        SELECT count(distinct file_md5) FROM file_info
+
     </select>
 
     <delete id="deleteFileByUserId">

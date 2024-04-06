@@ -1,6 +1,7 @@
 package com.eyunpan.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.eyunpan.component.RedisComponent;
@@ -14,12 +15,14 @@ import com.eyunpan.entity.po.FileInfo;
 import com.eyunpan.entity.po.UserInfo;
 import com.eyunpan.entity.qo.FileInfoQO;
 import com.eyunpan.entity.qo.SimplePage;
+import com.eyunpan.entity.vo.FileCntDto;
 import com.eyunpan.entity.vo.PaginationResultVO;
 import com.eyunpan.exception.CustomException;
 import com.eyunpan.mappers.FileMapper;
 import com.eyunpan.mappers.UserInfoMapper;
 import com.eyunpan.service.FileInfoService;
 import com.eyunpan.service.UserInfoService;
+import com.eyunpan.tuple.ITuple2;
 import com.eyunpan.utils.*;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -127,16 +130,15 @@ public class FileInfoServiceImpl extends ServiceImpl<FileMapper, FileInfo> imple
                 LambdaQueryWrapper<FileInfo> queryWrapper = WrapperFactory.fileInfoQueryWrapper();
                 queryWrapper.eq(FileInfo::getFileMd5,fileMd5);
                 queryWrapper.eq(FileInfo::getStatus, FileStatusEnums.USING.getStatus());
-                FileInfo fileInfo = getOne(queryWrapper);
-
-                if (fileInfo!=null){
+                List<FileInfo> list = list(queryWrapper);
+                if (!list.isEmpty()){
+                    FileInfo fileInfo = list.get(0);
                     if (fileInfo.getFileSize()+spaceDto.getUseSpace()>spaceDto.getTotalSpace()){
                         throw new CustomException(ResponseCodeEnum.CODE_904);
                     }
                     fileInfo.setFileId(fileId);
                     fileInfo.setFilePid(filePid);
                     fileInfo.setUserId(webUserDto.getUserId());
-                    fileInfo.setFileMd5(null);
                     fileInfo.setCreateTime(date);
                     fileInfo.setLastUpdateTime(date);
                     fileInfo.setStatus(FileStatusEnums.USING.getStatus());
@@ -454,6 +456,35 @@ public class FileInfoServiceImpl extends ServiceImpl<FileMapper, FileInfo> imple
             saveAllSubFile(saveList,fileInfo,shareUserId,userId,date,myFolderId);
         }
         saveBatch(saveList);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public PaginationResultVO findRankByPage(FileInfoQO query) {
+        PaginationResultVO<FileCntDto> fileRankCache = redisComponent.getFileRankCache();
+        if (fileRankCache!=null){
+            return fileRankCache;
+        }
+        LambdaQueryWrapper<FileInfo> queryWrapper = WrapperFactory.fileInfoQueryWrapper();
+        int count = fileMapper.selectCountByMd5();
+        int pageSize=query.getPageSize()==null?PageSize.SIZE15.getSize() : query.getPageSize();
+        SimplePage simplePage = new SimplePage(query.getPageNo(), count, pageSize);
+        List<ITuple2> fileDownloadRank = redisComponent.getFileDownloadRank(Constants.REDIS_FILE_TOP);
+        int end=simplePage.getStart()+simplePage.getEnd();
+        List<ITuple2> iTuple2s = fileDownloadRank.subList(simplePage.getStart()
+                , end>fileDownloadRank.size()?fileDownloadRank.size():end);
+        ArrayList<FileCntDto> fileCntDtos = new ArrayList<>();
+        for (ITuple2 iTuple2:iTuple2s){
+            queryWrapper.clear();
+            queryWrapper.eq(FileInfo::getFileMd5,iTuple2.getA());
+            FileInfo one = list(queryWrapper).get(0);
+            FileCntDto cntDto = CopyTools.copy(one, FileCntDto.class);
+            cntDto.setCount((int)iTuple2.getB());
+            fileCntDtos.add(cntDto);
+        }
+        PaginationResultVO<FileCntDto> resultVO = new PaginationResultVO<>(count, pageSize, simplePage.getPageNo(), simplePage.getPageTotal(), fileCntDtos);
+        redisComponent.setFileRankCache(resultVO);
+        return resultVO;
     }
 
     private void saveAllSubFile(ArrayList<FileInfo> saveList, FileInfo fileInfo, String shareUserId, String userId, Date date, String myFolderId) {

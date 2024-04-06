@@ -10,5 +10,5 @@ public interface FileMapper extends IBaseMapper<FileInfo, FileInfoQO> {
 
 
     Long selectUseSpace(@Param("userId") String userId);
-
+    Integer selectCountByMd5();
 }
