@@ -46,6 +46,10 @@ public class RedisComponent {
         return systemSettingDto;
     }
 
+    public void setSysSettingsDto(SystemSettingDto sysSettingsDto){
+        redisUtils.set(Constants.REDIS_KEY_SYS_SETTING,sysSettingsDto);
+    }
+
     public void saveUserSpaceUse(String userId, UserSpaceDto userSpaceDto) {
         redisUtils.setex(Constants.REDIS_KEY_USER_SPACE_USE + userId, userSpaceDto, Constants.REDIS_KEY_EXPIRES_DAY);
 

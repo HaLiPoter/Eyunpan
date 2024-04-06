@@ -70,7 +70,11 @@ public class FileInfoServiceImpl extends ServiceImpl<FileMapper, FileInfo> imple
     @Override
     public Long getUserUseSpace(String userId) {
         LambdaQueryWrapper<FileInfo> queryWrapper = WrapperFactory.fileInfoQueryWrapper();
+        queryWrapper.eq(FileInfo::getUserId,userId);
         List<FileInfo> list = list(queryWrapper);
+        if (list.isEmpty()){
+            return 0L;
+        }
         return  list.stream().mapToLong(new ToLongFunction<FileInfo>() {
             @Override
             public long applyAsLong(FileInfo value) {
@@ -386,6 +390,9 @@ public class FileInfoServiceImpl extends ServiceImpl<FileMapper, FileInfo> imple
         LambdaQueryWrapper<FileInfo> queryWrapper = WrapperFactory.fileInfoQueryWrapper();
         queryWrapper.eq(FileInfo::getUserId,userId)
                 .in(FileInfo::getFileId,fileIdList);
+
+        //管理员删除文件时，直接删除
+        //普通用户删除文件时，只能删除回收站中的文件
         if (!admin){
             queryWrapper.eq(FileInfo::getDelFlag,FileDelFlagEnums.RECYCLE.getFlag());
         }
@@ -651,7 +658,12 @@ public class FileInfoServiceImpl extends ServiceImpl<FileMapper, FileInfo> imple
         queryWrapper.eq(FileInfo::getUserId,userId);
         return getOne(queryWrapper);
     }
-    private void updateUserSpce(SessionUserDto webUserDto, Long fileSize) {
+    @Transactional(rollbackFor = Exception.class)
+    public void updateUserSpce(SessionUserDto webUserDto, Long fileSize) {
+        UserInfo userInfo = userInfoService.getById(webUserDto.getUserId());
+        if (fileSize+userInfo.getUseSpace()>userInfo.getTotalSpace()){
+            throw new CustomException("网盘空间不足");
+        }
         LambdaUpdateWrapper<UserInfo> updateWrapper = WrapperFactory.userInfoUpdateWrapper();
         updateWrapper.eq(UserInfo::getUserId,webUserDto.getUserId());
         updateWrapper.setSql(fileSize!=null,"use_space=use_space+"+fileSize);

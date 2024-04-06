@@ -9,22 +9,28 @@ import com.eyunpan.entity.constants.Constants;
 import com.eyunpan.entity.dto.SessionUserDto;
 import com.eyunpan.entity.dto.SystemSettingDto;
 import com.eyunpan.entity.dto.UserSpaceDto;
+import com.eyunpan.entity.enums.PageSize;
 import com.eyunpan.entity.enums.UserStatusEnum;
 import com.eyunpan.entity.po.UserInfo;
+import com.eyunpan.entity.qo.SimplePage;
 import com.eyunpan.entity.qo.UserInfoQO;
+import com.eyunpan.entity.vo.PaginationResultVO;
 import com.eyunpan.exception.CustomException;
 import com.eyunpan.mappers.UserInfoMapper;
 import com.eyunpan.service.EmailCodeService;
 import com.eyunpan.service.FileInfoService;
 import com.eyunpan.service.UserInfoService;
 import com.eyunpan.utils.StringTools;
+import com.eyunpan.utils.WrapperFactory;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.swing.*;
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> implements UserInfoService {
@@ -41,6 +47,9 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
     @Autowired
     @Lazy
     private FileInfoService fileInfoService;
+
+    @Autowired
+    private UserInfoMapper userInfoMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -72,25 +81,24 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
             throw new CustomException("账号或密码错误");
         }
         if (UserStatusEnum.DISABLE.getStatus().equals(userInfo.getStatus())) {
-            throw new CustomException("账号已禁用");
+            throw new CustomException("账号已被禁用");
         }
-        UserInfo updateInfo = new UserInfo();
-        updateInfo.setLastLoginTime(new Date());
+        userInfo.setLastLoginTime(new Date());
         updateById(userInfo);
-        SessionUserDto sessionWebUserDto = new SessionUserDto();
-        sessionWebUserDto.setNickName(userInfo.getNickName());
-        sessionWebUserDto.setUserId(userInfo.getUserId());
+        SessionUserDto sessionUserDto = new SessionUserDto();
+        sessionUserDto.setNickName(userInfo.getNickName());
+        sessionUserDto.setUserId(userInfo.getUserId());
         if (ArrayUtils.contains(appConfig.getAdminEmails().split(","), email)) {
-            sessionWebUserDto.setIsAdmin(true);
+            sessionUserDto.setIsAdmin(true);
         } else {
-            sessionWebUserDto.setIsAdmin(false);
+            sessionUserDto.setIsAdmin(false);
         }
-        //用户空间
+        //每次登录重新设置redis的用户空间信息，从mysql中计算获得
         UserSpaceDto userSpaceDto = new UserSpaceDto();
         userSpaceDto.setUseSpace(fileInfoService.getUserUseSpace(userInfo.getUserId()));
         userSpaceDto.setTotalSpace(userInfo.getTotalSpace());
         redisComponent.saveUserSpaceUse(userInfo.getUserId(), userSpaceDto);
-        return sessionWebUserDto;
+        return sessionUserDto;
     }
 
     @Override
@@ -111,5 +119,46 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
     @Override
     public void updateUserInfoByUserId(UserInfo userInfo, String userId) {
         update(userInfo,new LambdaUpdateWrapper<UserInfo>().eq(UserInfo::getUserId,userId));
+    }
+
+    @Override
+    public List<UserInfo> getListByQO(UserInfoQO userInfoQO) {
+        return userInfoMapper.IselectList(userInfoQO);
+    }
+
+    @Override
+    public PaginationResultVO<UserInfo> getListByPage(UserInfoQO qo) {
+        int count = userInfoMapper.IselectCount(qo);
+        int pageSize = qo.getPageSize() == null ? PageSize.SIZE15.getSize() : qo.getPageSize();
+
+        SimplePage page = new SimplePage(qo.getPageNo(), count, pageSize);
+        qo.setSimplePage(page);
+        List<UserInfo> list = userInfoMapper.IselectList(qo);
+        PaginationResultVO<UserInfo> result = new PaginationResultVO(count, page.getPageSize(), page.getPageNo(), page.getPageTotal(), list);
+        return result;
+    }
+
+    @Override
+    public void updateUserStatus(String userId, Integer status) {
+        LambdaUpdateWrapper<UserInfo> updateWrapper = WrapperFactory.userInfoUpdateWrapper();
+        updateWrapper.eq(UserInfo::getUserId,userId);
+        updateWrapper.set(UserInfo::getStatus,status);
+        update(updateWrapper);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void changeUserSpace(String userId, Integer changeSpace) {
+        long space = changeSpace*Constants.MB;
+        UserInfo userInfo = getById(userId);
+        LambdaUpdateWrapper<UserInfo> updateWrapper = WrapperFactory.userInfoUpdateWrapper();
+        long nxtTotal=space+userInfo.getTotalSpace();
+        if (nxtTotal<userInfo.getUseSpace()){
+            throw new CustomException("修改用户空间失败");
+        }
+        updateWrapper.set(UserInfo::getTotalSpace,nxtTotal);
+        updateWrapper.eq(UserInfo::getUserId,userId);
+        update(updateWrapper);
+        redisComponent.resetUserSpaceUse(userId);
     }
 }
