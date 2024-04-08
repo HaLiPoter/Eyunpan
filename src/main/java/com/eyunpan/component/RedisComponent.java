@@ -127,8 +127,8 @@ public class RedisComponent {
     }
 
 
-    public List<ITuple2> getFileDownloadRank(String key){
-        return redisUtils.zrevrangeWithScore(key);
+    public List<ITuple2> getFileDownloadRank(String key,int start, int end){
+        return redisUtils.zrevrangeWithScore(key,start,end);
     }
 
     public void addFileDownloadCnt(String key){

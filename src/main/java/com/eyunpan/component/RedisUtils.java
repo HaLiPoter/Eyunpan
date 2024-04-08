@@ -85,10 +85,10 @@ public class RedisUtils<V> {
         }
     }
 
-    public List<ITuple2> zrevrangeWithScore(String key){
+    public List<ITuple2> zrevrangeWithScore(String key,long start,long end){
         ArrayList<ITuple2> tuple2s = new ArrayList<>();
         try {
-            Set<ZSetOperations.TypedTuple<V>> typedTuples = redisTemplate.opsForZSet().reverseRangeWithScores(key, 0, -1);
+            Set<ZSetOperations.TypedTuple<V>> typedTuples = redisTemplate.opsForZSet().reverseRangeWithScores(key, start, end-1);
             for (ZSetOperations.TypedTuple<V> tuple:typedTuples){
                 tuple2s.add(ITuple2.valueOf((String)tuple.getValue(),tuple.getScore().intValue()));
             }

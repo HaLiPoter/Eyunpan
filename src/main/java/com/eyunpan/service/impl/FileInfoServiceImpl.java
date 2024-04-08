@@ -469,12 +469,10 @@ public class FileInfoServiceImpl extends ServiceImpl<FileMapper, FileInfo> imple
         int count = fileMapper.selectCountByMd5();
         int pageSize=query.getPageSize()==null?PageSize.SIZE15.getSize() : query.getPageSize();
         SimplePage simplePage = new SimplePage(query.getPageNo(), count, pageSize);
-        List<ITuple2> fileDownloadRank = redisComponent.getFileDownloadRank(Constants.REDIS_FILE_TOP);
         int end=simplePage.getStart()+simplePage.getEnd();
-        List<ITuple2> iTuple2s = fileDownloadRank.subList(simplePage.getStart()
-                , end>fileDownloadRank.size()?fileDownloadRank.size():end);
+        List<ITuple2> fileDownloadRank = redisComponent.getFileDownloadRank(Constants.REDIS_FILE_TOP,simplePage.getStart(),end);
         ArrayList<FileCntDto> fileCntDtos = new ArrayList<>();
-        for (ITuple2 iTuple2:iTuple2s){
+        for (ITuple2 iTuple2:fileDownloadRank){
             queryWrapper.clear();
             queryWrapper.eq(FileInfo::getFileMd5,iTuple2.getA());
             FileInfo one = list(queryWrapper).get(0);
