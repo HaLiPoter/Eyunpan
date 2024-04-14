@@ -206,4 +206,9 @@ public class FileController extends BaseFileController{
         PaginationResultVO rankByPage = fileInfoService.findRankByPage(query);
         return getSuccessResponseVO(rankByPage);
     }
+
+    @RequestMapping("/loadAllFile")
+    public ResponseVO loadAllFile(){
+        return getSuccessResponseVO(fileInfoService.list());
+    }
 }
